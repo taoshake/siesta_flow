@@ -24,7 +24,7 @@ def do_scf_calculation(atoms, calc, dos=True, band_structure=True, potential=Fal
     if os.path.exists("dos/siesta.DM"):
         pass
     elif os.path.exists("relax/siesta.DM"):
-        os.system(f"ln -s {pwd}/relax/siesta.DM dos/siesta.DM")
+        os.system(f"cp {pwd}/relax/siesta.DM dos/siesta.DM")
     dos_calc=copy.deepcopy(calc)
     dos_calc.label='dos/siesta'
     fdf=dos_calc['fdf_arguments']
@@ -40,11 +40,11 @@ def do_scf_calculation(atoms, calc, dos=True, band_structure=True, potential=Fal
     if band_structure:
         fdf.update({'BandLinesScale': 'pi/a',
                    'BandLines':['1  0.0 0.0 0.0 \Gamma',
-                               '22 1.0 0.0 0.0 X',
-                               '22 1.0 1.0 0.0 M',
+                               '22 3.0 0.0 0.0 X',
+                               '22 3.0 3.0 0.0 M',
                                '33 0.0 0.0 0.0 \Gamma',
-                               '39 1.0 1.0 1.0 R',
-                               '33 1.0 0.0 0.0 X']
+                               '39 3.0 3.0 3.0 R',
+                               '33 3.0 0.0 0.0 X']
                    })
     if potential:
         fdf.update({'SaveElectrostaticPotential': ' .true.',
@@ -56,6 +56,7 @@ def do_scf_calculation(atoms, calc, dos=True, band_structure=True, potential=Fal
                     })
 
     dos_calc.set_fdf_arguments(fdf)
+    print(fdf)
     dos_calc.calculate(atoms)
     os.system('cp dos/siesta.out Results/siesta_scf.out') 
     os.system('cp dos/siesta.fdf Results/siesta_scf.fdf') 
@@ -87,46 +88,3 @@ do_phonon_calculation=calculate_phonon
 #        #   [ 1., -1.,  1.],
 #        #   [ 1.,  1., -1.]]), parallel=False,symprec=1e-3)
 
-def run():
-    # generate atom structure
-    atoms=read("siesta.vasp")
-
-    ##### spin or no_spin??  number from 0 here because it is python. 
-    # number 8 in vasp, here is 7
-    m=np.zeros(len(atoms))
-    m[7]=2
-    m[15]=1
-    atoms.set_initial_magnetic_moments(m)
-    
-    ##### parameter xc
-    xc='PBEsol'
-    pseudo_path, species = get_species(atoms, xc=xc, rel='sr')
-    fdf_arguments={'Meshcutoff':'400 Ry', 'DM.Tolerance':'0.0001','ElectronicTemperature':'100 K','ElectronicTemperature':'100 K','DM.NumberPulay': '6', 'DM.MixingWeight': '0.1'}
-    ######
-    netcharge=0
-    if netcharge !=0:
-        fdf_arguments.update({'NetCharge':f'{netcharge}', 'SimulateDoping':'.true.'})
-    calc = MySiesta(
-                    label='siesta',
-                    kpts=[7,7,7],
-                    xc=xc,
-                    basis_set='DZP',
-                    species=species,
-                    ### spin='non-polarized', 'collinear', 'non-colliner','spin-orbit'
-                    spin='collinear',
-                    pseudo_path=pseudo_path,
-		    fdf_arguments=fdf_arguments)
-
-
-    if not os.path.exists('Results'):
-        os.makedirs('Results')
-    
-    ####### maxforce: 0.01 or 0.001
-    do_relax_calculation(atoms, calc,  MaxForceTol=1e-2, MaxStressTol=0.1, NumCGSteps=1000 ,VariableCell=False)
-    do_scf_calculation(atoms, calc,dos=True, band_structure=True, potential=False, UseDM=True)
-    #do_phonon_calculation(atoms, calc, ndim=np.array([[-1.,  1.,  1.],
-    #   [ 1., -1.,  1.],
-    #   [ 1.,  1., -1.]]), parallel=False,symprec=1e-3)
-
-if __name__=='__main__':
-    run()

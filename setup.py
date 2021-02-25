@@ -9,7 +9,7 @@ setup(
     author_email='jiahui.jia@icn2.cat',
     license='MIT',
     packages=find_packages(),
-    install_requires=['numpy','matplotlib','scipy','ase', 'spglib', 'phonopy'],
+    install_requires=['numpy','matplotlib','scipy','ase', 'spglib', 'phonopy', 'pyDFTutils'],
     scripts=[],
     classifiers=[
         'Development Status :: 3 - Alpha',

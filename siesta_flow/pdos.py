@@ -79,6 +79,17 @@ def plot_pdos(fname, figname, efermi, xlim=(-10, 10), ylim=(None,None)):
     #plt.show()
     plt.close() 
 
+def plot_total_dos(fname, efermi, xlim=(-6,6), ylime=(0,60)):
+    data=np.loadtxt(fname)
+    x=data[:,0]
+    y=data[:,1]
+    plt.plot(x-efermi,y)
+    plt.axvline(0,color='red')
+    plt.xlabel('$E-E_f$ (eV)')
+    plt.ylabel('DOS')
+    plt.show()
+    plt.savefig('total_dos.png')
+
 #core function
 def gen_pdos_figure(pdos_fname, iatom, n, l, m, xlim=(-10, 10), ylim=(None,None),output_path='./'):
     outfile, efermi = get_pdos_data(pdos_fname, iatom, n, l, m)

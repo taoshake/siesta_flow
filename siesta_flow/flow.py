@@ -8,27 +8,26 @@ import os
 import copy
 from siesta_flow.pdos import gen_pdos_figure, plot_layer_pdos 
 
-def do_relax_calculation(atoms, calc, MaxForceTol=1e-2, MaxStressTol=0.1, NumCGSteps=1000,VariableCell=False, TypeOfRun='cg'):
-    calc.label='relax/siesta'
+def do_relax_calculation(atoms, calc, MaxForceTol=1e-2, MaxStressTol=0.1, NumCGSteps=1000,VariableCell=False, TypeOfRun='cg', path='.'):
+    calc.label=f'{path}/relax/siesta'
     atoms=calc.relax(atoms, MaxForceTol=MaxForceTol, MaxStressTol=MaxStressTol, NumCGSteps=NumCGSteps, VariableCell=VariableCell,TypeOfRun=TypeOfRun)
-    write('Results/relaxed.vasp', atoms, vasp5=True) 
+    write(f'{path}/Results/relaxed.vasp', atoms, vasp5=True) 
 
-    os.system('cp relax/siesta.out Results/siesta_relax.out') 
-    os.system('cp relax/siesta.fdf Results/siesta_relax.fdf') 
-    os.system('cp relax/siesta.XV Results/siesta.XV') 
+    os.system(f'cp {path}/relax/siesta.out {path}/Results/siesta_relax.out') 
+    os.system(f'cp {path}/relax/siesta.fdf {path}/Results/siesta_relax.fdf') 
+    os.system(f'cp {path}/relax/siesta.XV {path}/Results/siesta.XV') 
 
-def do_scf_calculation(atoms, calc, dos=True, band_structure=True, potential=False, UseDM=True):
-    if not os.path.exists('dos'):
-        os.makedirs('dos')
+def do_scf_calculation(atoms, calc, dos=True, band_structure=True, potential=False, UseDM=True, path='./'):
+    if not os.path.exists(f'{path}/dos'):
+        os.makedirs(f'{path}/dos')
     pwd=os.getcwd()
-    if os.path.exists("dos/siesta.DM"):
+    if os.path.exists(f"{path}/dos/siesta.DM"):
         pass
-    elif os.path.exists("relax/siesta.DM"):
-        os.system(f"cp {pwd}/relax/siesta.DM dos/siesta.DM")
+    elif os.path.exists(f"{path}/relax/siesta.DM"):
+        os.system(f"cp {pwd}/{path}/relax/siesta.DM {path}/dos/siesta.DM")
     dos_calc=copy.deepcopy(calc)
-    dos_calc.label='dos/siesta'
+    dos_calc.label=f'{path}/dos/siesta'
     fdf=dos_calc['fdf_arguments']
-    ###### DM: 会同步relax/DM file,所以如果算错了，这里要写成false.
     fdf.update({'DM.UseSaveDM':UseDM})
     if dos:
         fdf.update({'WriteEigenvalues': '.true.', 
@@ -58,27 +57,27 @@ def do_scf_calculation(atoms, calc, dos=True, band_structure=True, potential=Fal
     dos_calc.set_fdf_arguments(fdf)
     print(fdf)
     dos_calc.calculate(atoms)
-    os.system('cp dos/siesta.out Results/siesta_scf.out') 
-    os.system('cp dos/siesta.fdf Results/siesta_scf.fdf') 
+    os.system(f'cp {path}/dos/siesta.out {path}/Results/siesta_scf.out') 
+    os.system(f'cp {path}/dos/siesta.fdf {path}/Results/siesta_scf.fdf') 
 
 
-    os.system('cp dos/siesta.PDOS Results/siesta.PDOS') 
-    os.system('cp dos/siesta.PDOS siesta.PDOS') 
-    os.system('cp dos/siesta.DOS Results/siesta.DOS') 
-    os.system('cp dos/siesta.VH Results/siesta.VH') 
-   
+    os.system(f'cp {path}/dos/siesta.PDOS {path}/Results/siesta.PDOS') 
+    os.system(f'cp {path}/dos/siesta.DOS {path}/Results/siesta.DOS') 
+    os.system(f'cp {path}/dos/siesta.VH {path}/Results/siesta.VH') 
+    os.system(f'cp {path}/dos/siesta.PDOS siesta.PDOS') 
+
     symbols=atoms.get_chemical_symbols()
     sdict={}
     for s in symbols:
         if s not in sdict:
             sdict[s]=f"{s}.{len(sdict)+1}"
     for s in set(symbols):
-        gen_pdos_figure('siesta.PDOS', sdict[s], 0,-1,9 ,output_path='./Results', xlim=(-5,5), ylim=(-20,20))
-    os.system('mv pdos*.dat Results/')
+        gen_pdos_figure('siesta.PDOS', sdict[s], 0,-1,9 ,output_path=f'./{path}/Results', xlim=(-5,5), ylim=(-20,20))
+    os.system(f'mv {path}/pdos*.dat {path}/Results/')
 
     for iatom in range(len(atoms)):
-        gen_pdos_figure('siesta.PDOS', iatom+1, 0,-1,9 ,output_path='./Results', xlim=(-5,5), ylim=(-8,8))
-    os.system('mv pdos*.dat Results/')
+        gen_pdos_figure(f'siesta.PDOS', iatom+1, 0,-1,9 ,output_path=f'./{path}/Results', xlim=(-5,5), ylim=(-8,8))
+    os.system(f'mv {path}/pdos*.dat {path}/Results/')
 do_phonon_calculation=calculate_phonon
 
 #def do_phonon_calculation(atoms, calc):

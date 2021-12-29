@@ -16,6 +16,7 @@ def do_relax_calculation(atoms, calc, MaxForceTol=1e-2, MaxStressTol=0.1, NumCGS
     os.system(f'cp {path}/relax/siesta.out {path}/Results/siesta_relax.out') 
     os.system(f'cp {path}/relax/siesta.fdf {path}/Results/siesta_relax.fdf') 
     os.system(f'cp {path}/relax/siesta.XV {path}/Results/siesta.XV') 
+    return atoms
 
 def do_scf_calculation(atoms, calc, dos=True, band_structure=True, potential=False, UseDM=True, path='./'):
     if not os.path.exists(f'{path}/dos'):
@@ -63,7 +64,7 @@ def do_scf_calculation(atoms, calc, dos=True, band_structure=True, potential=Fal
 
     os.system(f'cp {path}/dos/siesta.PDOS {path}/Results/siesta.PDOS') 
     os.system(f'cp {path}/dos/siesta.DOS {path}/Results/siesta.DOS') 
-    os.system(f'cp {path}/dos/siesta.VH {path}/Results/siesta.VH') 
+    #os.system(f'cp {path}/dos/siesta.VH {path}/Results/siesta.VH') 
     os.system(f'cp {path}/dos/siesta.PDOS siesta.PDOS') 
 
     symbols=atoms.get_chemical_symbols()
